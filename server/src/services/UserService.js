@@ -47,22 +47,45 @@ const addPhoneNumber = async (phone, userId) => {
     });
 }
 
+// const confirmPhoneNumber = async (userId, confirmationcode) => {
+//     // Знаходимо користувача за ID
+//     const user = await User.findByPk(userId);
+//     if (!user) {
+//         throw { status: 404, message: 'Користувача не знайдено' };
+//     }
+
+//     // Перевіряємо код підтвердження
+//     if (user.confirmationcode !== confirmationcode) {
+//         throw { status: 400, message: 'Невірний код підтвердження.' };
+//     }
+
+//     // Оновлюємо статус підтвердження телефону
+//     await user.update({ phoneconfirmed: true, confirmationcode: null });
+
+//     return { message: 'Номер телефону успішно підтверджено.' };
+// };
+
 const confirmPhoneNumber = async (userId, confirmationcode) => {
-    // Знаходимо користувача за ID
-    const user = await User.findByPk(userId);
-    if (!user) {
-        throw { status: 404, message: 'Користувача не знайдено' };
+    try {
+        // Знаходимо користувача за ID
+        const user = await User.findByPk(userId);
+        if (!user) {
+            throw { status: 404, message: 'Користувача не знайдено' };
+        }
+
+        // Перевіряємо код підтвердження
+        if (user.confirmationcode !== confirmationcode) {
+            throw { status: 400, message: 'Невірний код підтвердження.' };
+        }
+
+        // Оновлюємо статус підтвердження телефону
+        await user.update({ phoneconfirmed: true, confirmationcode: null });
+
+        return { message: 'Номер телефону успішно підтверджено.' };
+    } catch (error) {
+        console.error('Error confirming phone number:', error);
+        throw error; // Перенаправлення помилки GraphQL
     }
-
-    // Перевіряємо код підтвердження
-    if (user.confirmationcode !== confirmationcode) {
-        throw { status: 400, message: 'Невірний код підтвердження.' };
-    }
-
-    // Оновлюємо статус підтвердження телефону
-    await user.update({ phoneconfirmed: true, confirmationcode: null });
-
-    return { message: 'Номер телефону успішно підтверджено.' };
 };
 
 // Логіка авторизації
@@ -104,32 +127,73 @@ const logoutUser = async (token) => {
     }
 }
 
+// const getUserProfile = async (userId) => {
+//     const user = await User.findByPk(userId, {
+//         attributes: [
+//             'id',
+//             'name',
+//             'lastname',
+//             'email',
+//             'emailconfirmed',
+//             'phone',
+//             'phoneconfirmed',
+//             'confirmationcode',
+//             'googleid',
+//             'role',
+//             'is_blocked'
+//         ]
+//     });
+
+//     if (!user) {
+//         throw { status: 404, message: 'User not found' };
+//     }
+
+//     // Додаємо додаткові поля до профілю
+//     return {
+//         ...user.toJSON(),
+//         googleRegistered: !!user.googleid // Boolean значення для реєстрації через Google
+//     };
+// };
+
 const getUserProfile = async (userId) => {
-    const user = await User.findByPk(userId, {
-        attributes: [
-            'id',
-            'name',
-            'lastname',
-            'email',
-            'emailconfirmed',
-            'phone',
-            'phoneconfirmed',
-            'confirmationcode',
-            'googleid',
-            'role',
-            'is_blocked'
-        ]
-    });
+    try {
+        const user = await User.findByPk(userId, {
+            attributes: [
+                'id',
+                'name',
+                'lastname',
+                'email',
+                'emailconfirmed',
+                'phone',
+                'phoneconfirmed',
+                'confirmationcode',
+                'googleid',
+                'role',
+                'is_blocked'
+            ]
+        });
 
-    if (!user) {
-        throw { status: 404, message: 'User not found' };
+        if (!user) {
+            throw { status: 404, message: 'User not found' };
+        }
+
+        // Return user profile with additional fields
+        return {
+            id: user.id,
+            name: user.name,
+            lastname: user.lastname,
+            email: user.email,
+            emailConfirmed: user.emailconfirmed,
+            phone: user.phone,
+            phoneConfirmed: user.phoneconfirmed,
+            googleRegistered: !!user.googleid,
+            role: user.role,
+            isBlocked: user.is_blocked
+        };
+    } catch (error) {
+        console.error('Error fetching user profile:', error);
+        throw error; // Rethrow error for GraphQL to handle
     }
-
-    // Додаємо додаткові поля до профілю
-    return {
-        ...user.toJSON(),
-        googleRegistered: !!user.googleid // Boolean значення для реєстрації через Google
-    };
 };
 
 const refreshToken = async (token) => {

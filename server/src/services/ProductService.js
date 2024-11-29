@@ -8,10 +8,19 @@ const getProducts = async () => {
     return products;
 }
 
-const getUserProducts = async (productId) => {
-    const products = await Product.findAll(productId);
+// const getUserProducts = async (productId) => {
+//     const products = await Product.findAll(productId);
+//     return products;
+// }
+
+const getUserProducts = async (userId) => {
+    const products = await Product.findAll({
+        where: {
+            user_id: userId
+        }
+    });
     return products;
-}
+};
 
 const getProductById = async (id) => {
     const product = await Product.findByPk(id);
@@ -23,29 +32,62 @@ const getProductById = async (id) => {
     return product;
 };
 
+// const addProduct = async ({ userId, name, description, price, stock, category, subcategory, images }) => {
+//     // Знайдемо або створимо категорію
+//     let categoryRecord = await Category.findOne({ where: { name: category } });
+//     if (!categoryRecord) {
+//         categoryRecord = await Category.create({ name: category });
+//     }
+
+//     // Знайдемо або створимо підкатегорію
+//     let subcategoryRecord = await Subcategory.findOne({ where: { name: subcategory, category_id: categoryRecord.id } });
+//     if (!subcategoryRecord) {
+//         subcategoryRecord = await Subcategory.create({ name: subcategory, category_id: categoryRecord.id });
+//     }
+
+//     // Створюємо новий продукт із посиланням на підкатегорію
+//     const product = await Product.create({
+//         user_id: userId,
+//         name,
+//         description,
+//         price,
+//         stock,
+//         images: images.length ? images : null,
+//         subcategory_id: subcategoryRecord.id,
+//         is_active: true
+//     });
+
+//     return product;
+// };
+
 const addProduct = async ({ userId, name, description, price, stock, category, subcategory, images }) => {
-    // Знайдемо або створимо категорію
+    // Перевірка чи існує категорія
     let categoryRecord = await Category.findOne({ where: { name: category } });
     if (!categoryRecord) {
         categoryRecord = await Category.create({ name: category });
     }
 
-    // Знайдемо або створимо підкатегорію
-    let subcategoryRecord = await Subcategory.findOne({ where: { name: subcategory, category_id: categoryRecord.id } });
+    // Перевірка чи існує підкатегорія
+    let subcategoryRecord = await Subcategory.findOne({
+        where: { name: subcategory, category_id: categoryRecord.id }
+    });
     if (!subcategoryRecord) {
-        subcategoryRecord = await Subcategory.create({ name: subcategory, category_id: categoryRecord.id });
+        subcategoryRecord = await Subcategory.create({
+            name: subcategory,
+            category_id: categoryRecord.id
+        });
     }
 
-    // Створюємо новий продукт із посиланням на підкатегорію
+    // Створення продукту
     const product = await Product.create({
         user_id: userId,
         name,
         description,
         price,
-        stock,
-        images: images.length ? images : null,
+        stock: stock || 0,
+        images: images && images.length ? images : null, // Перевіряємо наявність images
         subcategory_id: subcategoryRecord.id,
-        is_active: true
+        is_active: true,
     });
 
     return product;
