@@ -31,6 +31,19 @@ type Product {
         subcategory: String!,
         images: [String]
     ): Product!
+
+    input UpdateProductInput {
+      name: String
+      description: String
+      price: Float
+      stock: Int
+      images: [String]
+      is_active: Boolean
+      is_blocked: Boolean
+  }
+    updateProduct(id: ID!, updateData: UpdateProductInput!): Product!
+    deleteProduct(id: ID!): Boolean!
+    searchProducts(query: String!): [Product]!
   }
 
 `;

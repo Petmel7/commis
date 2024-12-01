@@ -8,11 +8,6 @@ const getProducts = async () => {
     return products;
 }
 
-// const getUserProducts = async (productId) => {
-//     const products = await Product.findAll(productId);
-//     return products;
-// }
-
 const getUserProducts = async (userId) => {
     const products = await Product.findAll({
         where: {
@@ -31,34 +26,6 @@ const getProductById = async (id) => {
 
     return product;
 };
-
-// const addProduct = async ({ userId, name, description, price, stock, category, subcategory, images }) => {
-//     // Знайдемо або створимо категорію
-//     let categoryRecord = await Category.findOne({ where: { name: category } });
-//     if (!categoryRecord) {
-//         categoryRecord = await Category.create({ name: category });
-//     }
-
-//     // Знайдемо або створимо підкатегорію
-//     let subcategoryRecord = await Subcategory.findOne({ where: { name: subcategory, category_id: categoryRecord.id } });
-//     if (!subcategoryRecord) {
-//         subcategoryRecord = await Subcategory.create({ name: subcategory, category_id: categoryRecord.id });
-//     }
-
-//     // Створюємо новий продукт із посиланням на підкатегорію
-//     const product = await Product.create({
-//         user_id: userId,
-//         name,
-//         description,
-//         price,
-//         stock,
-//         images: images.length ? images : null,
-//         subcategory_id: subcategoryRecord.id,
-//         is_active: true
-//     });
-
-//     return product;
-// };
 
 const addProduct = async ({ userId, name, description, price, stock, category, subcategory, images }) => {
     // Перевірка чи існує категорія
@@ -94,18 +61,16 @@ const addProduct = async ({ userId, name, description, price, stock, category, s
 };
 
 const updateProduct = async (id, updateData) => {
-    const product = await getProductById(id);
-    await product.update(updateData);
-
-    return product;
-};
-
-const findProductById = async (id) => {
+    // Знаходимо продукт за ID
     const product = await Product.findByPk(id);
     if (!product) {
-        throw { status: 404, message: 'Продукт не знайдено' };
+        throw { status: 404, message: 'Продукт не знайдено.' };
     }
-    return product;
+
+    // Оновлюємо продукт
+    await product.update(updateData);
+
+    return product; // Повертаємо оновлений продукт
 };
 
 const checkOwnershipOrAdmin = async (user, productId) => {
@@ -123,14 +88,27 @@ const checkOwnershipOrAdmin = async (user, productId) => {
     return product;
 };
 
-const deleteProduct = async (product) => {
+const deleteProduct = async (id) => {
+    // Знаходимо продукт за ID
+    const product = await Product.findByPk(id);
+    if (!product) {
+        throw { status: 404, message: 'Продукт не знайдено.' };
+    }
+
+    // Отримуємо ID підкатегорії продукту
     const subcategoryId = product.subcategory_id;
+
+    // Видаляємо продукт
     await product.destroy();
 
+    // Перевіряємо, чи залишилися продукти в цій підкатегорії
     const remainingProducts = await Product.count({ where: { subcategory_id: subcategoryId } });
     if (remainingProducts === 0) {
+        // Видаляємо підкатегорію, якщо продуктів більше немає
         await Subcategory.destroy({ where: { id: subcategoryId } });
     }
+
+    return true; // Повертаємо успішний результат
 };
 
 const deleteImagesFromProduct = async (productId, indices) => {
@@ -180,7 +158,6 @@ module.exports = {
     getProductById,
     addProduct,
     updateProduct,
-    findProductById,
     checkOwnershipOrAdmin,
     deleteProduct,
     deleteImagesFromProduct,

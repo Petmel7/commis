@@ -16,8 +16,6 @@ const AddOrUpdateProduct = () => {
         setInitialData(productData);
     };
 
-    console.log('**********initialData', initialData);
-
     useEffect(() => {
         if (productId) {
             fetchProduct();

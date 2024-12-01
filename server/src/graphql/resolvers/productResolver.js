@@ -16,6 +16,15 @@ const userResolver = {
         addProduct: async (_, { userId, name, description, price, stock, category, subcategory, images }) => {
             return await ProductService.addProduct(userId, name, description, price, stock, category, subcategory, images);
         },
+        updateProduct: async (_, { id, updateData }) => {
+            return await ProductService.updateProduct(id, updateData);
+        },
+        deleteProduct: async (_, { id }) => {
+            return await ProductService.deleteProduct(id);
+        },
+        searchProducts: async (_, { query }) => {
+            return await ProductService.searchProducts(query);
+        },
     },
 };
 
