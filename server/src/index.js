@@ -96,7 +96,7 @@ const server = new ApolloServer({
     schema,
     context: ({ req }) => {
         const token = req.headers.authorization || '';
-        // Можете додати логіку для авторизації тут
+
         return { token };
     },
 });
@@ -128,3 +128,9 @@ server.start().then(() => {
 // console.log('DB_PASSWORD:', process.env.DB_PASSWORD ? '******' : '(none)');
 // console.log('DB_NAME:', process.env.DB_NAME);
 // console.log('JWT_SECRET:', process.env.JWT_SECRET);
+
+
+
+
+// console.log('EMAIL_USER:', process.env.EMAIL_USER);
+// console.log('EMAIL_PASS:', process.env.EMAIL_PASS);

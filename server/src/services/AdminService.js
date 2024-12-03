@@ -1,11 +1,11 @@
 const { User, Order, Product, OrderItem, RefreshToken } = require('../models');
 
-const getUsersForAdmin = async () => {
+const getUsersForAdmin = async () => { //Перенесена в UserService
     const users = await User.findAll();
     return users;
 }
 
-const getUserById = async (id) => {
+const getUserById = async (id) => { //Перенесена в UserService
     const user = await User.findByPk(id);
 
     if (!user) {

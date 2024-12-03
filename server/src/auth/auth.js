@@ -12,8 +12,15 @@ const generateConfirmationCode = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
+const generateEmailConfirmationLink = (email) => {
+    const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    console.log('???????token', token);
+    return `http://localhost:5000/api/users/confirm/${token}`;
+};
+
 module.exports = {
     generateAccessToken,
     generateRefreshToken,
-    generateConfirmationCode
+    generateConfirmationCode,
+    generateEmailConfirmationLink
 }

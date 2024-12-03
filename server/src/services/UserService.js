@@ -2,93 +2,103 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const transporter = require('../config/emailConfig');
 const { User, RefreshToken, Product } = require('../models');
-const { generateAccessToken, generateRefreshToken, generateConfirmationCode } = require('../auth/auth');
+const { generateAccessToken, generateRefreshToken, generateConfirmationCode, generateEmailConfirmationLink } = require('../auth/auth');
 const { updateUserLoginStatus } = require('../utils/userUtils');
+const { sendEmailConfirmationLink } = require('../utils/emailUtils');
+
+const getAllUsers = async () => {
+    const users = await User.findAll();
+    return users;
+}
+
+const getUserById = async (id) => {
+    const user = await User.findByPk(id);
+
+    if (!user) {
+        throw { status: 404, message: 'User not found' };
+    }
+
+    return user;
+}
 
 const registerUser = async ({ name, lastname, email, password }) => {
     const existingUser = await User.findOne({ where: { email } });
+
     if (existingUser) {
-        throw { status: 400, message: 'User already exists' };
+        throw new Error('User already exists', 'USER_ALREADY_EXISTS');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = await User.create({ name, lastname, email, password: hashedPassword });
+    await User.create({ name, lastname, email, password: hashedPassword });
 
-    const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    const url = `http://localhost:5000/api/users/confirm/${token}`;
+    const url = generateEmailConfirmationLink(email);
 
-    await transporter.sendMail({
-        to: email,
-        subject: 'Confirm your email',
-        html: `<a href="${url}">Click here to confirm your email address.</a>`
-    });
-}
+    await sendEmailConfirmationLink(email, url);
+
+    return 'User registered successfully. Please check your email for confirmation.';
+};
 
 const confirmEmail = async (token) => {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    await User.update({ emailconfirmed: true }, { where: { email: decoded.email } });
-}
+    try {
+        // Декодуємо токен
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        if (!decoded.email) {
+            throw new Error("Токен не містить email");
+        }
+
+        // Оновлення статусу підтвердження email
+        await User.update(
+            { emailconfirmed: true },
+            { where: { email: decoded.email } }
+        );
+        return "Email підтверджено успішно";
+    } catch (err) {
+        // Помилка токена
+        console.error("Token verification error:", err.message);
+        throw new Error("Невалідний або протермінований токен");
+    }
+};
 
 const addPhoneNumber = async (phone, userId) => {
     const user = await User.findByPk(userId);
     if (!user) {
-        throw { status: 404, message: 'User not found' };
-
+        throw new Error('User not found');
     }
 
     const confirmationCode = generateConfirmationCode();
     await user.update({ phone, confirmationcode: confirmationCode });
 
-    await transporter.sendMail({
-        to: user.email,
-        subject: 'Confirm your phone number',
-        html: `<div>Your phone confirmation code: ${confirmationCode}</div>`
-    });
+    await sendPhoneConfirmationEmail(user.email, confirmationCode);
+
+    // Повертаємо підтвердження
+    return `Phone number ${phone} added successfully and confirmation email sent.`;
 }
-
-// const confirmPhoneNumber = async (userId, confirmationcode) => {
-//     // Знаходимо користувача за ID
-//     const user = await User.findByPk(userId);
-//     if (!user) {
-//         throw { status: 404, message: 'Користувача не знайдено' };
-//     }
-
-//     // Перевіряємо код підтвердження
-//     if (user.confirmationcode !== confirmationcode) {
-//         throw { status: 400, message: 'Невірний код підтвердження.' };
-//     }
-
-//     // Оновлюємо статус підтвердження телефону
-//     await user.update({ phoneconfirmed: true, confirmationcode: null });
-
-//     return { message: 'Номер телефону успішно підтверджено.' };
-// };
 
 const confirmPhoneNumber = async (userId, confirmationcode) => {
     try {
         // Знаходимо користувача за ID
         const user = await User.findByPk(userId);
         if (!user) {
-            throw { status: 404, message: 'Користувача не знайдено' };
+            throw new Error('Користувача не знайдено');
         }
 
         // Перевіряємо код підтвердження
-        if (user.confirmationcode !== confirmationcode) {
-            throw { status: 400, message: 'Невірний код підтвердження.' };
+        if (String(user.confirmationcode) !== String(confirmationcode)) {
+            throw new Error('Невірний код підтвердження.');
         }
 
         // Оновлюємо статус підтвердження телефону
         await user.update({ phoneconfirmed: true, confirmationcode: null });
 
-        return { message: 'Номер телефону успішно підтверджено.' };
+        return 'Номер телефону успішно підтверджено.';
     } catch (error) {
         console.error('Error confirming phone number:', error);
         throw error; // Перенаправлення помилки GraphQL
     }
 };
 
-// Логіка авторизації
 const loginUser = async (email, password) => {
     // Перевірка наявності користувача
     const user = await User.findOne({ where: { email } });
@@ -106,54 +116,36 @@ const loginUser = async (email, password) => {
     await updateUserLoginStatus(user);
 
     // Генеруємо токени
-    const accessToken = generateAccessToken(user.id);
-    const refreshToken = generateRefreshToken(user.id);
+    const accessToken = generateAccessToken(user.id, user.email);
+    const refreshToken = generateRefreshToken(user.id, user.email);
 
-    // Зберігаємо refresh token у базі даних
+    // Видаляємо старий refresh-токен (за бажанням)
+    await RefreshToken.destroy({ where: { user_id: user.id } });
+
+    // Зберігаємо новий refresh-токен
     await RefreshToken.create({ user_id: user.id, token: refreshToken });
 
-    return { accessToken, refreshToken, user };
+    // Повертаємо результати
+    return {
+        accessToken,
+        refreshToken,
+        user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+        },
+    };
 };
 
 const logoutUser = async (token) => {
-    if (!token) {
-        throw { status: 400, message: 'No token provided' };
-    }
-    const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
-    const result = await RefreshToken.destroy({ where: { token } });
 
-    if (!result) {
-        throw { status: 400, message: 'Token not found' };
+    const deletedToken = await RefreshToken.destroy({ where: { token } });
+
+    if (!deletedToken) {
+        throw new Error("Невірні облікові дані");
     }
+    return "Logout успішний";
 }
-
-// const getUserProfile = async (userId) => {
-//     const user = await User.findByPk(userId, {
-//         attributes: [
-//             'id',
-//             'name',
-//             'lastname',
-//             'email',
-//             'emailconfirmed',
-//             'phone',
-//             'phoneconfirmed',
-//             'confirmationcode',
-//             'googleid',
-//             'role',
-//             'is_blocked'
-//         ]
-//     });
-
-//     if (!user) {
-//         throw { status: 404, message: 'User not found' };
-//     }
-
-//     // Додаємо додаткові поля до профілю
-//     return {
-//         ...user.toJSON(),
-//         googleRegistered: !!user.googleid // Boolean значення для реєстрації через Google
-//     };
-// };
 
 const getUserProfile = async (userId) => {
     try {
@@ -198,14 +190,14 @@ const getUserProfile = async (userId) => {
 
 const refreshToken = async (token) => {
     if (!token) {
-        throw { status: 401, message: 'Invalid token' };
+        throw new Error('Invalid token');
     }
 
     const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
     const storedToken = await RefreshToken.findOne({ where: { token } });
 
     if (!storedToken) {
-        throw { status: 401, message: 'Invalid token' };
+        throw new Error('Invalid token');
     }
 
     const newAccessToken = generateAccessToken(decoded.id);
@@ -263,6 +255,8 @@ const updateUserRoleIfNoProducts = async (userId) => {
 };
 
 module.exports = {
+    getAllUsers,
+    getUserById,
     registerUser,
     confirmEmail,
     addPhoneNumber,

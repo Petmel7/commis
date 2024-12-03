@@ -1,4 +1,6 @@
-// server/src/config/emailConfig.js
+const dotenv = require('dotenv');
+dotenv.config();
+
 const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
@@ -10,21 +12,3 @@ const transporter = nodemailer.createTransport({
 });
 
 module.exports = transporter;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
