@@ -3,12 +3,22 @@ const path = require('path');
 const fs = require('fs');
 const { Product, Category, Subcategory } = require('../models');
 
-const getProducts = async () => {
+const getAllProducts = async () => {
     const products = await Product.findAll();
     return products;
 }
 
-const getUserProducts = async (userId) => {
+const getProductById = async (id) => {
+    const product = await Product.findByPk(id);
+
+    if (!product) {
+        throw new Error('Продукт не знайдено');
+    }
+
+    return product;
+};
+
+const getSellerProducts = async (userId) => {
     const products = await Product.findAll({
         where: {
             user_id: userId
@@ -17,17 +27,8 @@ const getUserProducts = async (userId) => {
     return products;
 };
 
-const getProductById = async (id) => {
-    const product = await Product.findByPk(id);
+const addProduct = async (userId, name, description, price, stock, category, subcategory, images) => {
 
-    if (!product) {
-        throw { status: 404, message: 'Продукт не знайдено' };
-    }
-
-    return product;
-};
-
-const addProduct = async ({ userId, name, description, price, stock, category, subcategory, images }) => {
     // Перевірка чи існує категорія
     let categoryRecord = await Category.findOne({ where: { name: category } });
     if (!categoryRecord) {
@@ -64,7 +65,7 @@ const updateProduct = async (id, updateData) => {
     // Знаходимо продукт за ID
     const product = await Product.findByPk(id);
     if (!product) {
-        throw { status: 404, message: 'Продукт не знайдено.' };
+        throw new Error('Продукт не знайдено');
     }
 
     // Оновлюємо продукт
@@ -78,11 +79,11 @@ const checkOwnershipOrAdmin = async (user, productId) => {
     console.log('Перевірка прав доступу:', { userId: user.id, role: user.role, product });
 
     if (!product) {
-        throw { status: 404, message: 'Продукт не знайдено' };
+        throw new Error('Продукт не знайдено');
     }
 
     if (user.role !== 'superadmin' && product.user_id !== user.id) {
-        throw { status: 403, message: 'Ви не можете редагувати цей продукт' };
+        throw new Error('Ви не можете редагувати цей продукт');
     }
 
     return product;
@@ -92,7 +93,7 @@ const deleteProduct = async (id) => {
     // Знаходимо продукт за ID
     const product = await Product.findByPk(id);
     if (!product) {
-        throw { status: 404, message: 'Продукт не знайдено.' };
+        throw new Error('Продукт не знайдено');
     }
 
     // Отримуємо ID підкатегорії продукту
@@ -116,7 +117,7 @@ const deleteImagesFromProduct = async (productId, indices) => {
     const product = await Product.findByPk(productId);
 
     if (!product) {
-        throw { status: 404, message: 'Продукт не знайдено' };
+        throw new Error('Продукт не знайдено');
     }
 
     // Отримуємо шляхи зображень, які потрібно видалити
@@ -153,9 +154,9 @@ const searchProducts = async (query) => {
 };
 
 module.exports = {
-    getProducts,
-    getUserProducts,
+    getAllProducts,
     getProductById,
+    getSellerProducts,
     addProduct,
     updateProduct,
     checkOwnershipOrAdmin,

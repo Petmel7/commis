@@ -1,6 +1,6 @@
+const { Op } = require('sequelize');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const transporter = require('../config/emailConfig');
 const { User, RefreshToken, Product } = require('../models');
 const { generateAccessToken, generateRefreshToken, generateConfirmationCode, generateEmailConfirmationLink } = require('../auth/auth');
 const { updateUserLoginStatus } = require('../utils/userUtils');

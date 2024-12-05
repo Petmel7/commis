@@ -1,6 +1,27 @@
 
 const { Product, User, Order, OrderItem } = require('../models');
+const { validateTimestamps } = require('../validators/validators');
 const path = require('path');
+
+const getAllOrders = async () => {
+    const orders = await Order.findAll();
+
+    if (!orders) {
+        throw new Error('Замовлення не знайдено');
+    }
+
+    return orders;
+}
+
+const getOrderById = async (id) => {
+    const order = await Order.findByPk(id);
+
+    if (!order) {
+        throw new Error('Замовлення не знайдено');
+    }
+
+    return order;
+}
 
 // Функція для перевірки наявності продукту та доступності на складі
 const getProductAndValidateStock = async (productId, quantity) => {
@@ -13,6 +34,32 @@ const getProductAndValidateStock = async (productId, quantity) => {
     }
     return product;
 };
+
+// const generateOrderDetails = async (items) => {
+//     let total = 0;
+//     let orderDetails = '';
+//     const sellers = new Set();
+
+//     for (const item of items) {
+//         const product = await getProductAndValidateStock(item.product_id, item.quantity);
+//         total += product.price * item.quantity;
+
+//         const productImageURL = `http://localhost:5000/uploads/${path.basename(product.images[0])}`;
+//         const seller = await User.findByPk(product.user_id, { attributes: ['name', 'lastname', 'email'] });
+//         if (seller) sellers.add(seller.email);
+
+//         orderDetails += `
+//             <tr>
+//                 <td><img src="${productImageURL}" alt="${product.name}" width="50"/></td>
+//                 <td>${product.name}</td>
+//                 <td>${item.quantity}</td>
+//                 <td>${product.price}</td>
+//                 <td>${seller.name} ${seller.lastname}</td>
+//             </tr>`;
+//     }
+
+//     return { total, orderDetails, sellers };
+// };
 
 const createOrder = async (userId, items, address) => {
     let total = 0;
@@ -80,9 +127,11 @@ const deleteOrder = async (id) => {
 
     await OrderItem.destroy({ where: { order_id: id } });
     await Order.destroy({ where: { id } });
+
+    return 'Замовлення успішно видалене!';
 };
 
-const getOrder = async (id) => {
+const getOrderWithProducts = async (id) => {
     const order = await Order.findByPk(id, {
         include: [
             {
@@ -93,11 +142,13 @@ const getOrder = async (id) => {
     });
 
     if (!order) {
-        throw { status: 404, message: 'Order not found' };
+        throw new Error('Order not found');
     }
 
+    validateTimestamps(order);
+
     return order;
-}
+};
 
 const getUserOrders = async (userId) => {
     const orders = await Order.findAll({
@@ -105,10 +156,15 @@ const getUserOrders = async (userId) => {
         include: [
             {
                 model: OrderItem,
+                required: false,
                 include: [Product]
             }
         ]
     });
+
+    // Перевіряємо кожне замовлення в масиві
+    orders.forEach((order) => validateTimestamps(order));
+
     return orders;
 };
 
@@ -156,9 +212,11 @@ const getSellerOrders = async (sellerId) => {
 };
 
 module.exports = {
+    getAllOrders,
+    getOrderById,
     createOrder,
     deleteOrder,
-    getOrder,
+    getOrderWithProducts,
     getUserOrders,
     getSellerOrders,
     getProductAndValidateStock

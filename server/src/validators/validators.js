@@ -36,9 +36,31 @@ const validateFavoriteData = (productId) => {
     }
 };
 
+// const validateTimestamps = (entity) => {
+//     if (!entity.createdat) {
+//         entity.createdat = new Date().toISOString();
+//     }
+//     if (!entity.updatedat) {
+//         entity.updatedat = new Date().toISOString();
+//     }
+// };
+
+const validateTimestamps = (entities) => {
+    if (Array.isArray(entities)) {
+        entities.forEach((entity) => {
+            if (!entity.createdat) entity.createdat = new Date().toISOString();
+            if (!entity.updatedat) entity.updatedat = new Date().toISOString();
+        });
+    } else {
+        if (!entities.createdat) entities.createdat = new Date().toISOString();
+        if (!entities.updatedat) entities.updatedat = new Date().toISOString();
+    }
+};
+
 module.exports = {
     productSchema,
     addFavoriteSchema,
     validateProduct,
-    validateFavoriteData
+    validateFavoriteData,
+    validateTimestamps
 };

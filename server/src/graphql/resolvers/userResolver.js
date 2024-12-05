@@ -17,6 +17,13 @@ const userResolver = {
                 throw new ApolloError(error.message, error.code || "INTERNAL_SERVER_ERROR");
             }
         },
+        getUserProfile: async (_, { userId }) => {
+            try {
+                return await UserService.getUserProfile(userId);
+            } catch (error) {
+                throw new ApolloError(error.message, error.code || "INTERNAL_SERVER_ERROR");
+            }
+        },
     },
     Mutation: {
         registerUser: async (_, { name, lastname, email, password }) => {
@@ -57,13 +64,6 @@ const userResolver = {
         logoutUser: async (_, { token }) => {
             try {
                 return await UserService.logoutUser(token);
-            } catch (error) {
-                throw new ApolloError(error.message, error.code || "INTERNAL_SERVER_ERROR");
-            }
-        },
-        getUserProfile: async (_, { userId }) => {
-            try {
-                return await UserService.getUserProfile(userId);
             } catch (error) {
                 throw new ApolloError(error.message, error.code || "INTERNAL_SERVER_ERROR");
             }

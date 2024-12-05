@@ -80,7 +80,7 @@
 
 const express = require('express');
 const { ApolloServer } = require('apollo-server-express');
-const schema = require('./graphql');
+const schema = require('./graphql/index');
 const dotenv = require('dotenv');
 const sequelize = require('./config/db');
 const cors = require('cors');

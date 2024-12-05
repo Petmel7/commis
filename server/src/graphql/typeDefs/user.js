@@ -1,6 +1,6 @@
 const { gql } = require('apollo-server-express');
 
-module.exports = gql`
+const userTypeDefs = gql`
   type User {
     id: ID!
     name: String!
@@ -39,9 +39,15 @@ type LoginResponse {
     isBlocked: Boolean
 }
 
+type TokenPair {
+    newAccessToken: String!
+    newRefreshToken: String!
+}
+
   type Query {
-    users: [User!]!       # Отримати список користувачів
-    user(id: ID!): User   # Отримати користувача за ID
+    users: [User!]!
+    user(id: ID!): User
+    getUserProfile(userId: ID!): UserProfile
   }
 
   type Mutation {
@@ -51,7 +57,8 @@ type LoginResponse {
     confirmPhoneNumber(userId: ID!, confirmationcode: String!): String
     loginUser(email: String!, password: String!): LoginResponse!
     logoutUser(token: String!): String
-    getUserProfile(userId: ID!): UserProfile
-    refreshToken(token: String!): String
+    refreshToken(token: String!): TokenPair!
   }
 `;
+
+module.exports = userTypeDefs;
