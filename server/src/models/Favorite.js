@@ -32,9 +32,5 @@ const Favorite = sequelize.define('Favorite', {
     tableName: 'favorites'
 });
 
-// // Визначення асоціацій
-// Favorite.belongsTo(Product, { foreignKey: 'product_id' });
-// Favorite.belongsTo(User, { foreignKey: 'user_id' });
-
 module.exports = Favorite;
 

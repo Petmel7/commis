@@ -27,17 +27,17 @@ const orderTypeDefs = gql`
   }
 
   type Product {
-  id: ID!
-  name: String!
-  description: String!
-  price: Float!
-  stock: Int!
-  images: [String]
-  is_active: Boolean!
-  is_blocked: Boolean!
-  createdat: String!
-  updatedat: String!
-}
+    id: ID!
+    name: String!
+    description: String!
+    price: Float!
+    stock: Int!
+    images: [String]
+    is_active: Boolean
+    is_blocked: Boolean
+    created_at: String
+    updated_at: String
+  }
 
   type Seller {
     email: String!

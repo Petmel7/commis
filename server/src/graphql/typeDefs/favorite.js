@@ -10,12 +10,15 @@ const favoriteTypeDefs = gql`
 
   type Product {
     id: ID!
+    user_id: ID!
     name: String!
     description: String!
     price: Float!
     stock: Int!
     images: [String]
-    user_id: ID!
+    subcategory_id: ID
+    is_active: Boolean
+    is_blocked: Boolean
   }
 
   type Query {

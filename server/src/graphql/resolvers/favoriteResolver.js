@@ -1,32 +1,44 @@
+
 const FavoriteService = require('../../services/FavoriteService');
 const { ApolloError } = require('apollo-server-errors');
 
 const favoriteResolvers = {
     Query: {
-        getFavorites: async (_, __, { req }) => {
+        getFavorites: async (_, __, { user }) => {
+            if (!user) {
+                throw new ApolloError('Not authenticated', 'UNAUTHENTICATED');
+            }
             try {
-                return await FavoriteService.getFavorites(req);
+                return await FavoriteService.getFavorites(user);
             } catch (error) {
-                throw new ApolloError(error.message, error.code || "INTERNAL_SERVER_ERROR");
+                throw new ApolloError(error.message, error.code || 'INTERNAL_SERVER_ERROR');
             }
         },
     },
     Mutation: {
-        addFavorite: async (_, { productId }, { req }) => {
+        addFavorite: async (_, { productId }, { user }) => {
+            console.log('addFavorite->Resolver->user', user);
+            if (!user) {
+                throw new ApolloError('Not authenticated', 'UNAUTHENTICATED');
+            }
             try {
-                return await FavoriteService.addFavorite(productId, req);
+                await FavoriteService.addFavorite(productId, user);
+                return 'Product added to favorites';
             } catch (error) {
-                throw new ApolloError(error.message, error.code || "INTERNAL_SERVER_ERROR");
+                throw new ApolloError(error.message, error.code || 'INTERNAL_SERVER_ERROR');
             }
         },
-        deleteFavorite: async (_, { id }, { req }) => {
+        deleteFavorite: async (_, { id }, { user }) => {
+            if (!user) {
+                throw new ApolloError('Not authenticated', 'UNAUTHENTICATED');
+            }
             try {
-                return await FavoriteService.deleteFavorite(id, req);
+                await FavoriteService.deleteFavorite(id, user);
+                return 'Favorite deleted successfully';
             } catch (error) {
-                throw new ApolloError(error.message, error.code || "INTERNAL_SERVER_ERROR");
+                throw new ApolloError(error.message, error.code || 'INTERNAL_SERVER_ERROR');
             }
         },
-
     },
 };
 

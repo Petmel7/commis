@@ -83,6 +83,8 @@ const { ApolloServer } = require('apollo-server-express');
 const schema = require('./graphql/index');
 const dotenv = require('dotenv');
 const sequelize = require('./config/db');
+const jwt = require('jsonwebtoken');
+const User = require('./models/User');
 const cors = require('cors');
 
 dotenv.config();
@@ -91,13 +93,35 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Налаштування Apollo Server
 const server = new ApolloServer({
     schema,
-    context: ({ req }) => {
+    context: async ({ req }) => {
+        // Декодуємо токен і перевіряємо користувача
         const token = req.headers.authorization || '';
+        console.log('Server->token', token);
+        if (token.startsWith('Bearer')) {
+            try {
+                const decoded = jwt.verify(token.split(' ')[1], process.env.JWT_SECRET);
 
-        return { token };
+                // Отримуємо користувача з бази
+                const user = await User.findByPk(decoded.id, {
+                    attributes: ['id', 'name', 'email', 'role', 'is_blocked']
+                });
+
+                if (!user) {
+                    throw new Error('User not found');
+                }
+
+                if (user.is_blocked) {
+                    throw new Error('User is blocked');
+                }
+
+                return { user }; // Передаємо користувача у контекст
+            } catch (error) {
+                console.error('Authentication error:', error.message);
+            }
+        }
+        return {}; // Якщо токена немає, повертаємо порожній контекст
     },
 });
 
@@ -117,20 +141,3 @@ server.start().then(() => {
     });
 });
 
-
-
-
-
-
-
-// console.log('DB_HOST:', process.env.DB_HOST);
-// console.log('DB_USER:', process.env.DB_USER);
-// console.log('DB_PASSWORD:', process.env.DB_PASSWORD ? '******' : '(none)');
-// console.log('DB_NAME:', process.env.DB_NAME);
-// console.log('JWT_SECRET:', process.env.JWT_SECRET);
-
-
-
-
-// console.log('EMAIL_USER:', process.env.EMAIL_USER);
-// console.log('EMAIL_PASS:', process.env.EMAIL_PASS);

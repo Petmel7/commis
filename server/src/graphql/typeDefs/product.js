@@ -9,9 +9,9 @@ const productTypeDefs = gql`
     price: Float!
     stock: Int!
     images: [String]
-    subcategory_id: Int!
-    is_active: Boolean!
-    is_blocked: Boolean!
+    subcategory_id: ID
+    is_active: Boolean
+    is_blocked: Boolean
   }
 
   type Query {
