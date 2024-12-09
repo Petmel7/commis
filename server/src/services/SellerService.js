@@ -28,7 +28,7 @@ const getActiveSellers = async () => {
                     status: {
                         [Op.in]: ['shipped', 'completed', 'cancelled']
                     },
-                    createdat: {
+                    created_at: {
                         [Op.gte]: new Date(Date.now() - 6 * 30 * 24 * 60 * 60 * 1000) // Продажі за останні 6 місяців
                     }
                 },
@@ -37,6 +37,46 @@ const getActiveSellers = async () => {
         ]
     });
     return activeSellers;
+};
+
+const getNewSellers = async (days = 7) => {
+    const thresholdDate = new Date();
+    thresholdDate.setDate(thresholdDate.getDate() - days);
+
+    // Отримання нових продавців
+    const newSellers = await User.findAll({
+        where: {
+            role: 'seller',
+            created_at: {
+                [Op.gte]: thresholdDate, // Фільтрація за датою створення
+            },
+        },
+        attributes: ['id', 'name', 'email', 'created_at'], // Вибір потрібних полів
+    });
+
+    return newSellers;
+};
+
+const getBlockedSellers = async () => {
+    const blockedSellers = await User.findAll({
+        where: {
+            role: 'seller',
+            is_blocked: true
+        },
+        attributes: ['id', 'name', 'email', 'created_at']
+    });
+
+    return blockedSellers;
+};
+
+const getSellerStatistics = async () => {
+
+    const query = getSellerStatisticsQuery();
+    // Виконання запиту через Sequelize
+    return await sequelize.query(query, {
+        type: sequelize.QueryTypes.SELECT
+    });
+
 };
 
 const getActiveSellersById = async (sellerId) => {
@@ -65,7 +105,7 @@ const getActiveSellersById = async (sellerId) => {
                     status: {
                         [Op.in]: ['shipped', 'completed', 'cancelled']
                     },
-                    createdat: {
+                    created_at: {
                         [Op.gte]: new Date(Date.now() - 6 * 30 * 24 * 60 * 60 * 1000) // Продажі за останні 6 місяців
                     }
                 },
@@ -81,46 +121,6 @@ const getActiveSellersById = async (sellerId) => {
     return activeSeller;
 };
 
-const getNewSellers = async (days = 7) => {
-    const thresholdDate = new Date();
-    thresholdDate.setDate(thresholdDate.getDate() - days);
-
-    // Отримання нових продавців
-    const newSellers = await User.findAll({
-        where: {
-            role: 'seller',
-            createdat: {
-                [Op.gte]: thresholdDate, // Фільтрація за датою створення
-            },
-        },
-        attributes: ['id', 'name', 'email', 'createdat'], // Вибір потрібних полів
-    });
-
-    return newSellers;
-};
-
-const getBlockedSellers = async () => {
-    const blockedSellers = await User.findAll({
-        where: {
-            role: 'seller',
-            is_blocked: true
-        },
-        attributes: ['id', 'name', 'email', 'createdat']
-    });
-
-    return blockedSellers;
-};
-
-const getSellerStatistics = async () => {
-
-    const query = getSellerStatisticsQuery();
-    // Виконання запиту через Sequelize
-    return await sequelize.query(query, {
-        type: sequelize.QueryTypes.SELECT
-    });
-
-};
-
 const getSellerStatisticsById = async (sellerId) => {
 
     const query = getSellerStatisticsQuery(sellerId);
@@ -134,9 +134,9 @@ const getSellerStatisticsById = async (sellerId) => {
 
 module.exports = {
     getActiveSellers,
-    getActiveSellersById,
     getNewSellers,
     getBlockedSellers,
     getSellerStatistics,
+    getActiveSellersById,
     getSellerStatisticsById
 };

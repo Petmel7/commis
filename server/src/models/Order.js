@@ -40,7 +40,8 @@ const Order = sequelize.define('Order', {
         defaultValue: 'pending'
     },
 }, {
-    timestamps: false,
+    timestamps: true,
+    underscored: true,
     tableName: 'orders'
 });
 

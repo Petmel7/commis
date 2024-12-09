@@ -9,7 +9,8 @@ const userTypeDefs = gql`
     emailconfirmed: Boolean!
     role: String!
     is_blocked: Boolean!
-    createdat: String!
+    created_at: String
+    updated_at: String
     status: String!
     last_login: String
   }

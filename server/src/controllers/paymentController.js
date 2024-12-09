@@ -3,7 +3,6 @@ const paypal = require('@paypal/checkout-server-sdk');
 const { client } = require('../config/paypal');
 const { Payment, User } = require('../models');
 
-// Функція для обчислення комісії та суми для продавця
 const calculateCommission = (amount, rate = 0.1) => {
     const commission = (amount * rate).toFixed(2);
     const sellerAmount = (amount - commission).toFixed(2);
@@ -20,7 +19,7 @@ const createPayPalOrderRequest = (amount, totalAmount, orderId, currency = 'USD'
             reference_id: `order_${orderId}`,
             amount: {
                 currency_code: currency,
-                value: totalAmount,  // Загальна сума, яка включає item_total
+                value: totalAmount,
                 breakdown: {
                     item_total: { currency_code: currency, value: totalAmount },  // Вся сума включає комісію
                 },
@@ -38,14 +37,12 @@ const createPayPalOrderRequest = (amount, totalAmount, orderId, currency = 'USD'
     return request;
 };
 
-// Додайте комісію до sellerAmount для створення повної суми
 const createPayment = async (req, res, next) => {
     const { amount, currency, orderId, userId } = req.body;
 
     try {
         console.log('Creating PayPal order with amount:', amount);
 
-        // Обчислення комісії та суми для продавця
         const { commission, sellerAmount } = calculateCommission(amount);
         const totalAmount = parseFloat(sellerAmount) + parseFloat(commission);
 
@@ -82,16 +79,11 @@ const capturePayment = async (req, res, next) => {
     const { orderId, sellerId } = req.body;
 
     try {
-        // Захоплюємо платіж через PayPal API
         const request = new paypal.orders.OrdersCaptureRequest(orderId);
         request.requestBody({});
         const capture = await client().execute(request);
 
-        // Знаходимо продавця для виплати
         const seller = await User.findByPk(sellerId);
-
-        // Використайте PayPal Payouts API для переказу коштів продавцю (логіка виплат)
-        // Ваша комісія буде відрахована.
 
         res.status(200).json({
             status: 'success',
@@ -99,7 +91,7 @@ const capturePayment = async (req, res, next) => {
         });
     } catch (error) {
         console.error('Error capturing PayPal payment:', error);
-        next(error);  // Передача помилки в централізований обробник
+        next(error);
     }
 };
 

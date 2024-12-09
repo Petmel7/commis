@@ -4,13 +4,13 @@ const orderTypeDefs = gql`
   type Order {
     id: ID!
     user_id: ID!
-    total: Int!
+    total: Float!
     region: String!
     city: String!
     postoffice: String!
     status: String!
-    createdat: String!
-    updatedat: String!
+    created_at: String!
+    updated_at: String!
     items: [OrderItem]! # Масив може бути порожнім, але не null
   }
 
@@ -21,8 +21,8 @@ const orderTypeDefs = gql`
     quantity: Int!
     price: Int!
     size: String
-    createdat: String!
-    updatedat: String!
+    created_at: String!
+    updated_at: String!
     product: Product!
   }
 
@@ -47,7 +47,7 @@ const orderTypeDefs = gql`
 
   type CreateOrderResponse {
     order: Order!
-    total: Int!
+    total: Float!
     orderDetails: String!
     sellers: [String!]!
   }

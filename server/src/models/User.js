@@ -53,11 +53,6 @@ const User = sequelize.define('User', {
         allowNull: false,
         defaultValue: false,
     },
-    createdat: {
-        type: DataTypes.DATE,
-        allowNull: false,
-        defaultValue: DataTypes.NOW,
-    },
     status: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -68,7 +63,8 @@ const User = sequelize.define('User', {
         allowNull: true,
     }
 }, {
-    timestamps: false,
+    timestamps: true,
+    underscored: true,
     tableName: 'users'
 });
 

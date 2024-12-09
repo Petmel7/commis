@@ -1,11 +1,11 @@
-const Size = require('../models/Size');
-const Product = require('../models/Product');
+
+const { Size, Product } = require('../models');
 
 const getSizesByProductId = async (productId) => {
     const product = await Product.findByPk(productId, {
         include: {
             model: Size,
-            through: { attributes: [] } // Приєднуємо розміри до продукту без додаткових полів з таблиці зв'язків
+            through: { attributes: [] }
         }
     });
 
@@ -32,7 +32,6 @@ const addSizeToProduct = async (productId, sizes) => {
             if (!sizeRecord) {
                 sizeRecord = await Size.create({ size });
             }
-            // Додаємо розмір до продукту
             await product.addSize(sizeRecord);
         }
     }
@@ -46,7 +45,6 @@ const removeSizeFromProduct = async (productId, sizeId) => {
         throw { status: 404, message: 'Product or Size not found' };
     }
 
-    // Видалити розмір для продукту
     await product.removeSize(size);
 }
 
