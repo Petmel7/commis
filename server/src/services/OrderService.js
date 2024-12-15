@@ -3,6 +3,8 @@ const { Product, User, Order, OrderItem } = require('../models');
 const { validateTimestamps } = require('../validators/validators');
 const path = require('path');
 
+const { ApolloError } = require('apollo-server-errors');
+
 const getAllOrders = async () => {
     const orders = await Order.findAll();
 
@@ -35,45 +37,35 @@ const getProductAndValidateStock = async (productId, quantity) => {
     return product;
 };
 
-// const generateOrderDetails = async (items) => {
-//     let total = 0;
-//     let orderDetails = '';
-//     const sellers = new Set();
-
-//     for (const item of items) {
-//         const product = await getProductAndValidateStock(item.product_id, item.quantity);
-//         total += product.price * item.quantity;
-
-//         const productImageURL = `http://localhost:5000/uploads/${path.basename(product.images[0])}`;
-//         const seller = await User.findByPk(product.user_id, { attributes: ['name', 'lastname', 'email'] });
-//         if (seller) sellers.add(seller.email);
-
-//         orderDetails += `
-//             <tr>
-//                 <td><img src="${productImageURL}" alt="${product.name}" width="50"/></td>
-//                 <td>${product.name}</td>
-//                 <td>${item.quantity}</td>
-//                 <td>${product.price}</td>
-//                 <td>${seller.name} ${seller.lastname}</td>
-//             </tr>`;
-//     }
-
-//     return { total, orderDetails, sellers };
-// };
-
 const createOrder = async (userId, items, address) => {
+
+    console.log('???????userId', userId);
+    console.log('???????items', items);
+    console.log('???????address', address);
+
     let total = 0;
     let orderDetails = '';
     const sellers = new Set();
 
+    if (!Array.isArray(items) || items.length === 0) {
+        throw new Error('Items must be a non-empty array');
+    }
+
     // Генеруємо деталі замовлення
     for (const item of items) {
+        if (!item.product_id || !item.quantity) {
+            throw new Error('Each item must have a product_id and quantity');
+        }
         const product = await getProductAndValidateStock(item.product_id, item.quantity);
         total += product.price * item.quantity;
 
+        console.log('???????product', product);
+
         const productImageURL = `http://localhost:5000/uploads/${path.basename(product.images[0])}`;
-        const seller = await User.findByPk(product.user_id, { attributes: ['name', 'lastname', 'email'] });
+        const seller = await User.findByPk(product.user_id, { attributes: ['name', 'last_name', 'email'] });
         if (seller) sellers.add(seller.email);
+
+        console.log('???????seller', seller);
 
         orderDetails += `
             <tr>
@@ -81,18 +73,28 @@ const createOrder = async (userId, items, address) => {
                 <td>${product.name}</td>
                 <td>${item.quantity}</td>
                 <td>${product.price}</td>
-                <td>${seller.name} ${seller.lastname}</td>
+                <td>${seller.name} ${seller.last_name}</td>
             </tr>`;
     }
 
-    // Створюємо замовлення
+    // // Створюємо замовлення
+    // const order = await Order.create({
+    //     user_id: userId,
+    //     total,
+    //     region: address[0].region,
+    //     city: address[0].city,
+    //     post_office: address[0].post_office,
+    // });
+
     const order = await Order.create({
         user_id: userId,
         total,
-        region: address[0].region,
-        city: address[0].city,
-        postoffice: address[0].postoffice,
+        region: address.region,
+        city: address.city,
+        post_office: address.post_office,
     });
+
+    console.log('???????order', order);
 
     // Додаємо позиції до замовлення
     for (const item of items) {
@@ -199,7 +201,7 @@ const getSellerOrders = async (sellerId) => {
         shipping_address: {
             region: order.region,
             city: order.city,
-            postoffice: order.postoffice
+            post_office: order.post_office
         },
         products: order.OrderItems.map(item => ({
             product_name: item.Product.name,

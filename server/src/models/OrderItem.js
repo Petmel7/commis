@@ -46,6 +46,3 @@ const OrderItem = sequelize.define('OrderItem', {
 module.exports = OrderItem;
 
 
-// OrderItem.belongsTo(Order, { foreignKey: 'order_id' });
-// OrderItem.belongsTo(Product, { foreignKey: 'product_id' });
-

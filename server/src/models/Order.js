@@ -30,7 +30,7 @@ const Order = sequelize.define('Order', {
         type: DataTypes.STRING,
         allowNull: true
     },
-    postoffice: {
+    post_office: {
         type: DataTypes.STRING,
         allowNull: true
     },

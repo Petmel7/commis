@@ -7,11 +7,11 @@ const orderTypeDefs = gql`
     total: Float!
     region: String!
     city: String!
-    postoffice: String!
+    post_office: String
     status: String!
-    created_at: String!
-    updated_at: String!
-    items: [OrderItem]! # Масив може бути порожнім, але не null
+    created_at: String
+    updated_at: String
+    items: [OrderItem]!
   }
 
   type OrderItem {
@@ -21,8 +21,8 @@ const orderTypeDefs = gql`
     quantity: Int!
     price: Int!
     size: String
-    created_at: String!
-    updated_at: String!
+    created_at: String
+    updated_at: String
     product: Product!
   }
 
@@ -55,7 +55,7 @@ const orderTypeDefs = gql`
   input AddressInput {
     region: String!
     city: String!
-    postoffice: String!
+    post_office: String!
 }
 
   input OrderItemInput {
@@ -76,7 +76,7 @@ const orderTypeDefs = gql`
   type ShippingAddress {
     region: String!
     city: String!
-    postoffice: String!
+    post_office: String!
   }
 
   type SellerOrderProduct {
@@ -96,7 +96,7 @@ const orderTypeDefs = gql`
   }
 
   type Mutation {
-    createOrder(userId: ID!, items: [OrderItemInput!]!, address: [AddressInput!]!): CreateOrderResponse!
+    createOrder(userId: ID!, items: [OrderItemInput!]!, address: AddressInput!): CreateOrderResponse!
     deleteOrder(id: ID!): String!
  }
 `;

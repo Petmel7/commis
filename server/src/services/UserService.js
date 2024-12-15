@@ -5,6 +5,7 @@ const { User, RefreshToken, Product } = require('../models');
 const { generateAccessToken, generateRefreshToken, generateConfirmationCode, generateEmailConfirmationLink } = require('../auth/auth');
 const { updateUserLoginStatus } = require('../utils/userUtils');
 const { sendEmailConfirmationLink } = require('../utils/emailUtils');
+const { sendPhoneConfirmationEmail } = require('../utils/emailUtils');
 
 const getAllUsers = async () => {
     const users = await User.findAll();
@@ -50,7 +51,7 @@ const confirmEmail = async (token) => {
 
         // Оновлення статусу підтвердження email
         await User.update(
-            { emailconfirmed: true },
+            { email_confirmed: true },
             { where: { email: decoded.email } }
         );
         return "Email підтверджено успішно";
@@ -68,7 +69,7 @@ const addPhoneNumber = async (phone, userId) => {
     }
 
     const confirmationCode = generateConfirmationCode();
-    await user.update({ phone, confirmationcode: confirmationCode });
+    await user.update({ phone, confirmation_code: confirmationCode });
 
     await sendPhoneConfirmationEmail(user.email, confirmationCode);
 
@@ -85,12 +86,12 @@ const confirmPhoneNumber = async (userId, confirmationcode) => {
         }
 
         // Перевіряємо код підтвердження
-        if (String(user.confirmationcode) !== String(confirmationcode)) {
+        if (String(user.confirmation_code) !== String(confirmationcode)) {
             throw new Error('Невірний код підтвердження.');
         }
 
         // Оновлюємо статус підтвердження телефону
-        await user.update({ phoneconfirmed: true, confirmationcode: null });
+        await user.update({ phone_confirmed: true, confirmation_code: null });
 
         return 'Номер телефону успішно підтверджено.';
     } catch (error) {
@@ -125,16 +126,28 @@ const loginUser = async (email, password) => {
     // Зберігаємо новий refresh-токен
     await RefreshToken.create({ user_id: user.id, token: refreshToken });
 
-    // Повертаємо результати
-    return {
+    // // Повертаємо результати
+    // return {
+    //     accessToken,
+    //     refreshToken,
+    //     user: {
+    //         id: user.id,
+    //         name: user.name,
+    //         email: user.email,
+    //     },
+    // };
+
+    const userToken = {
         accessToken,
         refreshToken,
         user: {
             id: user.id,
             name: user.name,
             email: user.email,
-        },
-    };
+        }
+    }
+    console.log('???????userToken', userToken);
+    return userToken;
 };
 
 const logoutUser = async (token) => {
@@ -153,13 +166,13 @@ const getUserProfile = async (userId) => {
             attributes: [
                 'id',
                 'name',
-                'lastname',
+                'last_name',
                 'email',
-                'emailconfirmed',
+                'email_confirmed',
                 'phone',
-                'phoneconfirmed',
-                'confirmationcode',
-                'googleid',
+                'phone_confirmed',
+                'confirmation_code',
+                'google_id',
                 'role',
                 'is_blocked'
             ]
@@ -173,12 +186,12 @@ const getUserProfile = async (userId) => {
         return {
             id: user.id,
             name: user.name,
-            lastname: user.lastname,
+            lastname: user.last_name,
             email: user.email,
-            emailConfirmed: user.emailconfirmed,
+            emailConfirmed: user.email_confirmed,
             phone: user.phone,
-            phoneConfirmed: user.phoneconfirmed,
-            googleRegistered: !!user.googleid,
+            phoneConfirmed: user.phone_confirmed,
+            googleRegistered: !!user.google_id,
             role: user.role,
             isBlocked: user.is_blocked
         };

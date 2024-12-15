@@ -4,9 +4,9 @@ const userTypeDefs = gql`
   type User {
     id: ID!
     name: String!
-    lastname: String
+    last_name: String
     email: String!
-    emailconfirmed: Boolean!
+    email_confirmed: Boolean!
     role: String!
     is_blocked: Boolean!
     created_at: String
@@ -24,13 +24,13 @@ type UserSummary {
 type LoginResponse {
     accessToken: String!
     refreshToken: String!
-    user: UserSummary! # Вказує на спрощений тип User
+    user: UserSummary!
 }
 
   type UserProfile {
     id: Int
     name: String
-    lastname: String
+    last_name: String
     email: String
     emailConfirmed: Boolean
     phone: String
@@ -52,10 +52,10 @@ type TokenPair {
   }
 
   type Mutation {
-    registerUser(name: String!, lastname: String, email: String!, password: String!): String
+    registerUser(name: String!, last_name: String, email: String!, password: String!): String
     confirmEmail(token: String!): String
     addPhoneNumber(phone: String!, userId: ID!): String
-    confirmPhoneNumber(userId: ID!, confirmationcode: String!): String
+    confirmPhoneNumber(userId: ID!, confirmation_code: String!): String
     loginUser(email: String!, password: String!): LoginResponse!
     logoutUser(token: String!): String
     refreshToken(token: String!): TokenPair!

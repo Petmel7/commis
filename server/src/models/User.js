@@ -7,7 +7,7 @@ const User = sequelize.define('User', {
         type: DataTypes.STRING,
         allowNull: false
     },
-    lastname: {
+    last_name: {
         type: DataTypes.STRING,
         allowNull: true
     },
@@ -23,7 +23,7 @@ const User = sequelize.define('User', {
         type: DataTypes.STRING,
         allowNull: true
     },
-    emailconfirmed: {
+    email_confirmed: {
         type: DataTypes.BOOLEAN,
         defaultValue: false
     },
@@ -31,15 +31,15 @@ const User = sequelize.define('User', {
         type: DataTypes.STRING,
         allowNull: true
     },
-    phoneconfirmed: {
+    phone_confirmed: {
         type: DataTypes.BOOLEAN,
         defaultValue: false
     },
-    confirmationcode: {
+    confirmation_code: {
         type: DataTypes.STRING,
         allowNull: true
     },
-    googleid: {
+    google_id: {
         type: DataTypes.STRING,
         allowNull: true
     },

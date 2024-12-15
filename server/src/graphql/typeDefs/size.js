@@ -8,7 +8,7 @@ const sizeTypeDefs = gql`
     description: String!
     price: Float!
     stock: Int!
-    sizes: [Size!]!
+    sizes: [Size!]
 }
 
   type Size {

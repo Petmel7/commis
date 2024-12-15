@@ -98,7 +98,7 @@ const server = new ApolloServer({
     context: async ({ req }) => {
         // Декодуємо токен і перевіряємо користувача
         const token = req.headers.authorization || '';
-        console.log('Server->token', token);
+        console.log('???????Authorization->token', token);
         if (token.startsWith('Bearer')) {
             try {
                 const decoded = jwt.verify(token.split(' ')[1], process.env.JWT_SECRET);
