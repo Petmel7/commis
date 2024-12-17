@@ -10,7 +10,7 @@ const getSizesByProductId = async (productId) => {
     });
 
     if (!product) {
-        throw { status: 404, message: 'Product not found' };
+        throw new Error('Product not found');
     }
 
     return product.Sizes;
@@ -20,13 +20,13 @@ const addSizeToProduct = async (productId, sizes) => {
     const product = await Product.findByPk(productId);
 
     if (!product) {
-        throw { status: 404, message: 'Product not found' };
+        throw new Error('Product not found');
     }
 
     if (sizes && sizes.length > 0) {
         for (const size of sizes) {
             if (!size || size.trim() === '') {
-                throw { status: 400, message: 'Invalid size' };
+                throw new Error('Invalid size');
             }
             let sizeRecord = await Size.findOne({ where: { size } });
             if (!sizeRecord) {
@@ -42,7 +42,7 @@ const removeSizeFromProduct = async (productId, sizeId) => {
     const size = await Size.findByPk(sizeId);
 
     if (!product || !size) {
-        throw { status: 404, message: 'Product or Size not found' };
+        throw new Error('Product or Size not found');
     }
 
     await product.removeSize(size);

@@ -3,13 +3,11 @@ const { Product, User, Order, OrderItem } = require('../models');
 const { validateTimestamps } = require('../validators/validators');
 const path = require('path');
 
-const { ApolloError } = require('apollo-server-errors');
-
 const getAllOrders = async () => {
     const orders = await Order.findAll();
 
     if (!orders) {
-        throw new Error('Замовлення не знайдено');
+        throw new Error('Order not found');
     }
 
     return orders;
@@ -19,13 +17,12 @@ const getOrderById = async (id) => {
     const order = await Order.findByPk(id);
 
     if (!order) {
-        throw new Error('Замовлення не знайдено');
+        throw new Error('Order not found');
     }
 
     return order;
 }
 
-// Функція для перевірки наявності продукту та доступності на складі
 const getProductAndValidateStock = async (productId, quantity) => {
     const product = await Product.findByPk(productId);
     if (!product) {
@@ -37,21 +34,8 @@ const getProductAndValidateStock = async (productId, quantity) => {
     return product;
 };
 
-const createOrder = async (userId, items, address) => {
+const prepareOrderDetails = async (items, total, orderDetails, sellers) => {
 
-    console.log('???????userId', userId);
-    console.log('???????items', items);
-    console.log('???????address', address);
-
-    let total = 0;
-    let orderDetails = '';
-    const sellers = new Set();
-
-    if (!Array.isArray(items) || items.length === 0) {
-        throw new Error('Items must be a non-empty array');
-    }
-
-    // Генеруємо деталі замовлення
     for (const item of items) {
         if (!item.product_id || !item.quantity) {
             throw new Error('Each item must have a product_id and quantity');
@@ -59,13 +43,9 @@ const createOrder = async (userId, items, address) => {
         const product = await getProductAndValidateStock(item.product_id, item.quantity);
         total += product.price * item.quantity;
 
-        console.log('???????product', product);
-
         const productImageURL = `http://localhost:5000/uploads/${path.basename(product.images[0])}`;
         const seller = await User.findByPk(product.user_id, { attributes: ['name', 'last_name', 'email'] });
         if (seller) sellers.add(seller.email);
-
-        console.log('???????seller', seller);
 
         orderDetails += `
             <tr>
@@ -76,15 +56,19 @@ const createOrder = async (userId, items, address) => {
                 <td>${seller.name} ${seller.last_name}</td>
             </tr>`;
     }
+};
 
-    // // Створюємо замовлення
-    // const order = await Order.create({
-    //     user_id: userId,
-    //     total,
-    //     region: address[0].region,
-    //     city: address[0].city,
-    //     post_office: address[0].post_office,
-    // });
+const createOrder = async (userId, items, address) => {
+
+    let total = 0;
+    let orderDetails = '';
+    const sellers = new Set();
+
+    if (!Array.isArray(items) || items.length === 0) {
+        throw new Error('Items must be a non-empty array');
+    }
+
+    await prepareOrderDetails(items, total, orderDetails, sellers);
 
     const order = await Order.create({
         user_id: userId,
@@ -94,9 +78,6 @@ const createOrder = async (userId, items, address) => {
         post_office: address.post_office,
     });
 
-    console.log('???????order', order);
-
-    // Додаємо позиції до замовлення
     for (const item of items) {
         const product = await getProductAndValidateStock(item.product_id, item.quantity);
         await OrderItem.create({
@@ -107,7 +88,6 @@ const createOrder = async (userId, items, address) => {
             size: item.size,
         });
 
-        // Оновлюємо залишок на складі
         await product.update({ stock: product.stock - item.quantity });
     }
 
@@ -117,7 +97,7 @@ const createOrder = async (userId, items, address) => {
 const deleteOrder = async (id) => {
     const order = await Order.findByPk(id);
     if (!order) {
-        throw { status: 404, message: 'Order not found' };
+        throw new Error('Order not found');
     }
 
     const orderItems = await OrderItem.findAll({ where: { order_id: id } });
@@ -130,7 +110,7 @@ const deleteOrder = async (id) => {
     await OrderItem.destroy({ where: { order_id: id } });
     await Order.destroy({ where: { id } });
 
-    return 'Замовлення успішно видалене!';
+    return 'Order successfully deleted!';
 };
 
 const getOrderWithProducts = async (id) => {
@@ -164,7 +144,6 @@ const getUserOrders = async (userId) => {
         ]
     });
 
-    // Перевіряємо кожне замовлення в масиві
     orders.forEach((order) => validateTimestamps(order));
 
     return orders;

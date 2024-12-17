@@ -16,7 +16,7 @@ const getUserById = async (id) => {
     const user = await User.findByPk(id);
 
     if (!user) {
-        throw { status: 404, message: 'User not found' };
+        throw new Error('User not found');
     }
 
     return user;
@@ -42,23 +42,20 @@ const registerUser = async ({ name, lastname, email, password }) => {
 
 const confirmEmail = async (token) => {
     try {
-        // Декодуємо токен
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         if (!decoded.email) {
-            throw new Error("Токен не містить email");
+            throw new Error("The token does not contain an email");
         }
 
-        // Оновлення статусу підтвердження email
         await User.update(
             { email_confirmed: true },
             { where: { email: decoded.email } }
         );
-        return "Email підтверджено успішно";
+        return "Email confirmed successfully";
     } catch (err) {
-        // Помилка токена
         console.error("Token verification error:", err.message);
-        throw new Error("Невалідний або протермінований токен");
+        throw new Error("Invalid or expired token");
     }
 };
 
@@ -73,69 +70,48 @@ const addPhoneNumber = async (phone, userId) => {
 
     await sendPhoneConfirmationEmail(user.email, confirmationCode);
 
-    // Повертаємо підтвердження
     return `Phone number ${phone} added successfully and confirmation email sent.`;
 }
 
 const confirmPhoneNumber = async (userId, confirmationcode) => {
     try {
-        // Знаходимо користувача за ID
         const user = await User.findByPk(userId);
         if (!user) {
-            throw new Error('Користувача не знайдено');
+            throw new Error('No user found');
         }
 
-        // Перевіряємо код підтвердження
         if (String(user.confirmation_code) !== String(confirmationcode)) {
-            throw new Error('Невірний код підтвердження.');
+            throw new Error('Invalid verification code.');
         }
 
-        // Оновлюємо статус підтвердження телефону
         await user.update({ phone_confirmed: true, confirmation_code: null });
 
         return 'Номер телефону успішно підтверджено.';
     } catch (error) {
         console.error('Error confirming phone number:', error);
-        throw error; // Перенаправлення помилки GraphQL
+        throw error;
     }
 };
 
 const loginUser = async (email, password) => {
-    // Перевірка наявності користувача
     const user = await User.findOne({ where: { email } });
     if (!user) {
-        throw { status: 400, message: 'Невірні облікові дані' };
+        throw new Error("Invalid credentials");
     }
 
-    // Перевірка пароля
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
-        throw { status: 400, message: 'Невірні облікові дані' };
+        throw new Error("Invalid credentials");
     }
 
-    // Оновлюємо дату останнього входу
     await updateUserLoginStatus(user);
 
-    // Генеруємо токени
     const accessToken = generateAccessToken(user.id, user.email);
     const refreshToken = generateRefreshToken(user.id, user.email);
 
-    // Видаляємо старий refresh-токен (за бажанням)
     await RefreshToken.destroy({ where: { user_id: user.id } });
 
-    // Зберігаємо новий refresh-токен
     await RefreshToken.create({ user_id: user.id, token: refreshToken });
-
-    // // Повертаємо результати
-    // return {
-    //     accessToken,
-    //     refreshToken,
-    //     user: {
-    //         id: user.id,
-    //         name: user.name,
-    //         email: user.email,
-    //     },
-    // };
 
     const userToken = {
         accessToken,
@@ -146,7 +122,6 @@ const loginUser = async (email, password) => {
             email: user.email,
         }
     }
-    console.log('???????userToken', userToken);
     return userToken;
 };
 
@@ -155,9 +130,9 @@ const logoutUser = async (token) => {
     const deletedToken = await RefreshToken.destroy({ where: { token } });
 
     if (!deletedToken) {
-        throw new Error("Невірні облікові дані");
+        throw new Error("Invalid credentials");
     }
-    return "Logout успішний";
+    return "Logout successful";
 }
 
 const getUserProfile = async (userId) => {
@@ -182,7 +157,6 @@ const getUserProfile = async (userId) => {
             throw { status: 404, message: 'User not found' };
         }
 
-        // Return user profile with additional fields
         return {
             id: user.id,
             name: user.name,
@@ -197,7 +171,7 @@ const getUserProfile = async (userId) => {
         };
     } catch (error) {
         console.error('Error fetching user profile:', error);
-        throw error; // Rethrow error for GraphQL to handle
+        throw error;
     }
 };
 
@@ -224,11 +198,10 @@ const refreshToken = async (token) => {
     return { newAccessToken, newRefreshToken };
 }
 
-// Видалення старих Refresh Tokens
 const deleteOldRefreshTokens = async () => {
     try {
         const expirationDate = new Date();
-        expirationDate.setDate(expirationDate.getDate() - 7); // Видалення токенів, старших за 7 днів
+        expirationDate.setDate(expirationDate.getDate() - 7);
 
         const result = await RefreshToken.destroy({ where: { createdAt: { [Op.lt]: expirationDate } } });
         console.log(`Old refresh tokens deleted: ${result} tokens removed`);
@@ -238,10 +211,8 @@ const deleteOldRefreshTokens = async () => {
 };
 
 const updateUserRoleIfNecessary = async (user) => {
-    // Якщо користувач — superadmin, ніяких змін не потрібно
     if (user.role === 'superadmin') return;
 
-    // Оновлюємо роль користувача на 'seller', якщо це необхідно
     const [updatedRows] = await User.update({ role: 'seller' }, { where: { id: user.id } });
 
     if (updatedRows === 0) {
@@ -250,14 +221,12 @@ const updateUserRoleIfNecessary = async (user) => {
 };
 
 const updateUserRoleIfNoProducts = async (userId) => {
-    // Отримуємо користувача, щоб перевірити його роль
     const user = await User.findByPk(userId, { attributes: ['role'] });
 
     if (!user) {
-        throw new Error('Користувача не знайдено');
+        throw new Error('No user found');
     }
 
-    // Ігноруємо зміну ролі для адміністраторів
     if (user.role === 'superadmin') {
         return;
     }

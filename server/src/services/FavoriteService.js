@@ -3,7 +3,7 @@ const { validateFavoriteData } = require('../validators/validators');
 
 const getFavorites = async (user) => {
     if (!user) {
-        throw { status: 401, message: 'Not authenticated' };
+        throw new Error('Not authenticated');
     }
 
     const favorites = await Favorite.findAll({
@@ -26,7 +26,7 @@ const getFavorites = async (user) => {
 
 const addFavorite = async (productId, user) => {
     if (!user) {
-        throw { status: 401, message: 'Not authenticated' };
+        throw new Error('Not authenticated');
     }
 
     validateFavoriteData(productId);
@@ -36,21 +36,21 @@ const addFavorite = async (productId, user) => {
     });
 
     if (!created) {
-        throw { status: 409, message: 'The product has already been added to your favorites' };
+        throw new Error('The product has already been added to your favorites');
     }
 };
 
 const deleteFavorite = async (id, user) => {
     if (!user) {
-        throw { status: 401, message: 'Not authenticated' };
+        throw new Error('Not authenticated');
     }
 
     const favorite = await Favorite.findByPk(id);
     if (!favorite) {
-        throw { status: 404, message: 'Favorite not found' };
+        throw new Error('Favorite not found');
     }
     if (favorite.user_id !== user.id) {
-        throw { status: 403, message: 'Not authorized to delete this favorite' };
+        throw new Error('Not authorized to delete this favorite');
     }
 
     await favorite.destroy();
