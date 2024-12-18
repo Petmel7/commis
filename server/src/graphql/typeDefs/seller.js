@@ -3,11 +3,11 @@ const { gql } = require('apollo-server-express');
 const sellerTypeDefs = gql`
     # Тип користувача
     type User {
-        id: ID!
-        name: String!
-        email: String!
-        role: String!
-        is_blocked: Boolean!
+        id: ID
+        name: String
+        email: String
+        role: String
+        is_blocked: Boolean
         last_login: String
         created_at: String
         updated_at: String

@@ -8,6 +8,7 @@ const favoriteTypeDefs = require('./typeDefs/favorite');
 const catalogTypeDefs = require('./typeDefs/catalog');
 const sellerTypeDefs = require('./typeDefs/seller');
 const sizeTypeDefs = require('./typeDefs/size');
+const adminTypeDefs = require('./typeDefs/admin');
 
 const userResolvers = require('./resolvers/userResolver');
 const productResolvers = require('./resolvers/productResolver');
@@ -16,6 +17,7 @@ const favoriteResolvers = require('./resolvers/favoriteResolver');
 const catalogResolvers = require('./resolvers/catalogResolver');
 const sellerResolvers = require('./resolvers/sellerResolver');
 const sizesResolvers = require('./resolvers/sizesResolver');
+const adminResolvers = require('./resolvers/adminResolver');
 
 const schema = makeExecutableSchema({
     typeDefs: mergeTypeDefs([
@@ -25,7 +27,8 @@ const schema = makeExecutableSchema({
         favoriteTypeDefs,
         catalogTypeDefs,
         sellerTypeDefs,
-        sizeTypeDefs
+        sizeTypeDefs,
+        adminTypeDefs
     ]),
     resolvers: [
         userResolvers,
@@ -34,7 +37,8 @@ const schema = makeExecutableSchema({
         favoriteResolvers,
         catalogResolvers,
         sellerResolvers,
-        sizesResolvers
+        sizesResolvers,
+        adminResolvers
     ],
 });
 

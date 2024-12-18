@@ -39,7 +39,7 @@ const getUsersByRole = async (role) => {
     return users;
 };
 
-const deleteUserForAdmin = async (userId) => {
+const deleteUser = async (userId) => {
     if (!userId) {
         throw new Error('userId not passed in the request');
     }
@@ -57,7 +57,7 @@ const deleteUserForAdmin = async (userId) => {
     await User.destroy({ where: { id: userId } });
 }
 
-const updateUser = async (userId) => {
+const updateUser = async (userId, { name, email, phone, role }) => {
 
     const user = await User.findByPk(userId);
     if (!user) {
@@ -73,7 +73,7 @@ const updateUser = async (userId) => {
 
     return {
         user: {
-            id: user.id,
+            id: user.id || null,
             name: user.name,
             email: user.email,
             phone: user.phone,
@@ -82,24 +82,24 @@ const updateUser = async (userId) => {
     };
 }
 
-const blockUser = async (userId, is_blocked) => {
+const blockUser = async (userId, isBlocked) => {
     const user = await User.findByPk(userId);
     if (!user) {
         throw new Error('No user found');
     }
 
-    await user.update({ is_blocked });
+    await user.update({ is_blocked: isBlocked });
 
     return user;
 }
 
-const blockProduct = async (productId, is_blocked) => {
+const blockProduct = async (productId, isBlocked) => {
     const product = await Product.findByPk(productId);
     if (!productId) {
         throw new Error('No product found');
     }
 
-    await product.update({ is_blocked });
+    await product.update({ is_blocked: isBlocked });
 
     return product;
 }
@@ -107,7 +107,7 @@ const blockProduct = async (productId, is_blocked) => {
 module.exports = {
     getUserRoleCounts,
     getUsersByRole,
-    deleteUserForAdmin,
+    deleteUser,
     updateUser,
     blockUser,
     blockProduct
