@@ -40,8 +40,9 @@ const getUsersByRole = async (role) => {
 };
 
 const deleteUser = async (userId) => {
-    if (!userId) {
-        throw new Error('userId not passed in the request');
+
+    if (!userId || typeof userId !== 'number') {
+        throw new Error('Invalid userId. It must be a number.');
     }
 
     const orders = await Order.findAll({ where: { user_id: userId } });
@@ -55,6 +56,8 @@ const deleteUser = async (userId) => {
     await RefreshToken.destroy({ where: { user_id: userId } });
 
     await User.destroy({ where: { id: userId } });
+
+    return 'User deleted successfully.';
 }
 
 const updateUser = async (userId, { name, email, phone, role }) => {

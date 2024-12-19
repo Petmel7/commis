@@ -19,17 +19,18 @@ const adminResolver = {
         },
     },
     Mutation: {
-        deleteUser: async (_, { userId }) => {
+        deleteUser: async (_, args) => {
+            const userId = args.userId;
             try {
-                return await AdminService.deleteUser({ userId });
+                return await AdminService.deleteUser(parseInt(userId, 10));
             } catch (error) {
                 throw new ApolloError(error.message, error.code || "INTERNAL_SERVER_ERROR");
             }
         },
         updateUser: async (_, { userId, name, email, phone, role }) => {
             try {
-                await AdminService.updateUser(userId, { name, email, phone, role });
-                return updateUser.user
+                const result = await AdminService.updateUser(userId, { name, email, phone, role });
+                return result.user;
             } catch (error) {
                 throw new ApolloError(error.message, error.code || "INTERNAL_SERVER_ERROR");
             }

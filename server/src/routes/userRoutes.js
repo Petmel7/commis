@@ -20,7 +20,6 @@ router.get('/google/callback', passport.authenticate('google', { failureRedirect
             const accessToken = generateAccessToken(req.user.id);
             const refreshToken = generateRefreshToken(req.user.id);
 
-            // Збереження refresh token у базі даних
             await RefreshToken.create({ user_id: req.user.id, token: refreshToken });
 
             res.redirect(`http://localhost:3000/auth/callback?token=${accessToken}&refreshToken=${refreshToken}`);
