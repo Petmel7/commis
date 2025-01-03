@@ -46,7 +46,7 @@ const GET_PRODUCTS = gql`
 `;
 
 const Home = () => {
-    const { loading, error, data } = useQuery(GET_PRODUCTS); // Використовуємо useQuery
+    const { loading, error, data } = useQuery(GET_PRODUCTS);
     const products = data?.products || [];
 
     const loadingErrorComponent = useLoadingAndError(loading, error);

@@ -27,6 +27,7 @@ const userResolver = {
     },
     Mutation: {
         registerUser: async (_, { name, lastname, email, password }) => {
+            console.log('Args received:', { name, email, password });
             try {
                 return await UserService.registerUser({ name, lastname, email, password });
             } catch (error) {
