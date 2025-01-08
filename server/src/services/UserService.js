@@ -31,11 +31,15 @@ const registerUser = async ({ name, lastname, email, password }) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    await User.create({ name, lastname, email, password: hashedPassword });
+    const newUser = await User.create({ name, lastname, email, password: hashedPassword });
 
-    const url = generateEmailConfirmationLink(email);
-
-    await sendEmailConfirmationLink(email, url);
+    try {
+        const url = generateEmailConfirmationLink(email);
+        await sendEmailConfirmationLink(email, url);
+    } catch (mailError) {
+        await User.destroy({ where: { email } }); // Rollback
+        throw new Error('Failed to send email', 'EMAIL_ERROR');
+    }
 
     return 'User registered successfully. Please check your email for confirmation.';
 };
@@ -86,7 +90,7 @@ const confirmPhoneNumber = async (userId, confirmationcode) => {
 
         await user.update({ phone_confirmed: true, confirmation_code: null });
 
-        return 'Номер телефону успішно підтверджено.';
+        return 'The phone number has been successfully verified.';
     } catch (error) {
         console.error('Error confirming phone number:', error);
         throw error;
@@ -123,6 +127,16 @@ const loginUser = async (email, password) => {
         }
     }
     return userToken;
+
+    // return {
+    //     accessToken,
+    //     refreshToken,
+    //     user: {
+    //         id: user.id,
+    //         name: user.name,
+    //         email: user.email,
+    //     }
+    // }
 };
 
 const logoutUser = async (token) => {

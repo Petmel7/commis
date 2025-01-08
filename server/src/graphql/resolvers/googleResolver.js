@@ -53,45 +53,6 @@ const { RefreshToken } = require('../../models');
 const { updateUserLoginStatus } = require('../../utils/userUtils');
 const passport = require('../../config/passport');
 
-// const googleResolvers = {
-//     Mutation: {
-//         googleAuthRedirect: async () => {
-//             return 'https://accounts.google.com/o/oauth2/auth?client_id=' +
-//                 process.env.GOOGLE_CLIENT_ID +
-//                 '&redirect_uri=http://localhost:4000/graphql/google/callback&response_type=code&scope=profile email';
-//         },
-//         googleAuthCallback: async (_, { code }, { req, res }) => {
-//             return new Promise((resolve, reject) => {
-//                 passport.authenticate('google', { session: false }, async (err, user) => {
-//                     if (err || !user) {
-//                         return reject(new Error('Failed to authenticate with Google.'));
-//                     }
-
-//                     try {
-//                         await updateUserLoginStatus(user);
-
-//                         const accessToken = generateAccessToken(user.id);
-//                         const refreshToken = generateRefreshToken(user.id);
-
-//                         await RefreshToken.create({ user_id: user.id, token: refreshToken });
-
-//                         resolve({ accessToken, refreshToken });
-//                     } catch (error) {
-//                         console.error('Error during token generation:', error);
-//                         reject(new Error('Failed to complete Google authentication.'));
-//                     }
-//                 })(req, res);
-//             });
-//         },
-//     },
-// };
-
-// module.exports = googleResolvers;
-
-
-
-
-
 const googleResolvers = {
     Mutation: {
         googleAuthRedirect: async () => {
