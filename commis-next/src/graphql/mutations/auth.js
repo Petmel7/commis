@@ -24,3 +24,28 @@ export const CONFIRM_EMAIL = gql`
     }
 `;
 
+export const LOGOUT_USER = gql`
+    mutation LogoutUser($refreshToken: String!) {
+        logoutUser(refreshToken: $refreshToken) {
+            success
+            message
+        }
+    }
+`;
+
+export const GOOGLE_AUTH = gql`
+    mutation GoogleAuth($idToken: String!) {
+        googleAuth(idToken: $idToken) {
+            accessToken
+            refreshToken
+            user {
+                id
+                name
+                email
+            }
+        }
+    }
+`;
+
+
+

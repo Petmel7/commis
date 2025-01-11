@@ -76,20 +76,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { gql, useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client';
 import { validateEmail, validatePassword } from '@/utils/validation';
+import { LOGIN_USER } from '@/graphql/mutations/auth';
 import GoogleAuth from './GoogleAuth';
 import useLoadingAndError from '../../hooks/useLoadingAndError';
 import styles from './styles/Auth.module.css';
-
-const LOGIN_USER = gql`
-    mutation LoginUser($email: String!, $password: String!) {
-        loginUser(email: $email, password: $password) {
-            accessToken
-            refreshToken
-        }
-    }
-`;
 
 const Login = () => {
     const [email, setEmail] = useState('');

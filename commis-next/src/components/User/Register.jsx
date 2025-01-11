@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { gql, useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client';
 import { validateName, validateEmail, validatePassword } from '@/utils/validation';
 import GoogleAuth from './GoogleAuth';
 import styles from './styles/Auth.module.css';

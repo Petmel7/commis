@@ -81,25 +81,14 @@
 
 import Link from 'next/link';
 import React from 'react';
-import { gql, useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client';
+import { GET_USER } from '@/graphql/queries/user';
 import ConfirmEmailModal from './ConfirmEmailModal';
 import AddPhoneNumber from './AddPhoneNumber';
 import ConfirmPhoneModal from './ConfirmPhoneModal';
 import Tooltip from '../Tooltip/Tooltip';
 import UserStatusText from '../UserStatusText/UserStatusText';
 import styles from './styles/Profile.module.css';
-
-const GET_USER = gql`
-    query GetUser {
-        user {
-            id
-            name
-            email
-            role
-            isBlocked
-        }
-    }
-`;
 
 const Profile = () => {
     const { data, loading, error } = useQuery(GET_USER);
