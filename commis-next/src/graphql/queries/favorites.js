@@ -29,3 +29,13 @@ export const REMOVE_FAVORITE = gql`
         }
     }
 `;
+
+export const GET_FAVORITE_IDS = gql`
+    query GetFavoriteIds {
+        favorites {
+            id
+            productId
+        }
+    }
+`;
+
